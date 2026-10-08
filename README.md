@@ -2,6 +2,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+The application uses PostgreSQL. Follow the [Aiven PostgreSQL setup guide](docs/postgresql-setup.md) to configure `.env.local` and run `npm.cmd run db:migrate` before starting the app. See `.env.example` for the required settings.
+
 First, run the development server:
 
 ```bash

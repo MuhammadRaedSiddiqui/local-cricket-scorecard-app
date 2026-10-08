@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
-import Match, { IMatch, IPlayer, ITeam, IBall } from '@/models/Match';
+import Match, { IMatch, IPlayer, ITeam, IBall, MatchConflictError } from '@/models/Match';
 import { verifyToken } from '@/lib/auth';
 import { pusherServer } from '@/lib/pusher';
 
@@ -214,6 +214,9 @@ export async function POST(request: NextRequest, { params }: Params) {
     });
 
   } catch (error: any) {
+    if (error instanceof MatchConflictError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
     console.error(`❌ [UNDO] Error: ${error.message}`);
     if (error?.stack) console.error(error.stack);
     return NextResponse.json(

@@ -3,19 +3,7 @@
 import { motion } from 'framer-motion';
 import { Trophy } from 'lucide-react';
 import { useState } from 'react';
-
-interface TeamStats {
-  name: string;
-  matches: number;
-  wins: number;
-  losses: number;
-  draws: number;
-  winRate: number;
-  totalRuns: number;
-  averageScore: number;
-  highestScore: number;
-  totalWickets: number;
-}
+import type { TeamStats } from '@/types/leaderboard';
 
 interface TeamsLeaderboardProps {
   stats: TeamStats[];

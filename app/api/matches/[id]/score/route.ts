@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/db'
-import Match from '@/models/Match'
+import Match, { MatchConflictError } from '@/models/Match'
 import { verifyToken } from '@/lib/auth'
 import { pusherServer } from '@/lib/pusher';
 
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     if (isDefined(body['teamTwo.total_balls'])) updateData['teamTwo.total_balls'] = body['teamTwo.total_balls']
     if (isDefined(body['teamTwo.extras'])) updateData['teamTwo.extras'] = body['teamTwo.extras']
 
-    // Optional players - CRITICAL: Use proper MongoDB nested update syntax
+    // Optional players - CRITICAL: Support nested and dotted scorecard fields
     if (isDefined(body.teamOne?.players)) {
       updateData['teamOne.players'] = body.teamOne.players
       console.log('📝 [API] Updating teamOne.players:', {
@@ -235,11 +235,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     }
 
 
-    const updatedMatch = await Match.findByIdAndUpdate(
-      params.id,
-      { $set: updateData },
-      { new: true, runValidators: false }
-    )
+    const updatedMatch = await Match.updateById(params.id, updateData, existingMatch)
 
     if (!updatedMatch) {
       console.log('❌ [API] Failed to update match')
@@ -436,6 +432,9 @@ export async function POST(request: NextRequest, { params }: Params) {
       data: updatedMatch,
     })
   } catch (error: any) {
+    if (error instanceof MatchConflictError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
     const duration = Date.now() - startTime
     console.error(`❌ [API] Error after ${duration}ms: ${error?.message}`)
     if (error?.stack) console.error(error.stack)

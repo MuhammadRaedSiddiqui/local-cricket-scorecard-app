@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import ScoreCard from '@/components/sections/ScoreCard'
 import {
   ArrowLeft,
   Trophy,
@@ -27,11 +26,7 @@ export default function ScorecardPage() {
   const [match, setMatch] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchMatch()
-  }, [matchId])
-
-  const fetchMatch = async () => {
+  const fetchMatch = useCallback(async () => {
     try {
       const token = localStorage.getItem('auth_token')
       const response = await fetch(`/api/matches/${matchId}`, {
@@ -55,8 +50,11 @@ export default function ScorecardPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [matchId, router])
 
+  useEffect(() => {
+    fetchMatch()
+  }, [fetchMatch])
 
  // ...existing code...
 
@@ -143,7 +141,7 @@ export default function ScorecardPage() {
         <Card className="p-8 text-center">
           <Trophy className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-gray-900 mb-2">Match Not Found</h2>
-          <p className="text-gray-600 mb-4">This match doesn't exist or has been removed.</p>
+          <p className="text-gray-600 mb-4">This match doesn&apos;t exist or has been removed.</p>
           <Button onClick={() => router.push('/dashboard')}>
             Back to Dashboard
           </Button>
@@ -261,8 +259,6 @@ export default function ScorecardPage() {
             transition={{ delay: 0.1 }}
           >
             <ModernScorecard match={match} />
-            {/* <ScoreCard
-              match={match} /> */}
           </motion.div>
 
           <motion.div

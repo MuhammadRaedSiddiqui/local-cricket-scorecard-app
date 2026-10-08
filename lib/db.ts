@@ -1,45 +1,36 @@
-import mongoose from 'mongoose';
-
-const MONGODB_URI = process.env.MONGODB_URI!;
-
-if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable');
-}
-
-interface MongooseCache {
-  conn: typeof mongoose | null;
-  promise: Promise<typeof mongoose> | null;
-}
+import { Pool, PoolClient } from 'pg';
+import { createPostgresConfig } from './postgres-config.cjs';
 
 declare global {
-  var mongoose: MongooseCache | undefined;
+  var cricketPostgresPool: Pool | undefined;
 }
 
-const cached = global.mongoose || { conn: null, promise: null };
-
-if (!global.mongoose) {
-  global.mongoose = cached;
+// Open connections only when a request actually needs the database.
+export function getPool(): Pool {
+  if (!global.cricketPostgresPool) {
+    const pool = new Pool(createPostgresConfig());
+    pool.on('error', () => console.error('PostgreSQL connection error'));
+    global.cricketPostgresPool = pool;
+  }
+  return global.cricketPostgresPool;
 }
 
 export async function connectDB() {
-  if (cached.conn) {
-    return cached.conn;
-  }
+  await getPool().query('SELECT 1');
+  return getPool();
+}
 
-  if (!cached.promise) {
-    const opts = {
-      bufferCommands: false,
-    };
-
-    cached.promise = mongoose.connect(MONGODB_URI, opts);
-  }
-
+export async function withTransaction<T>(work: (client: PoolClient) => Promise<T>): Promise<T> {
+  const client = await getPool().connect();
   try {
-    cached.conn = await cached.promise;
-  } catch (e) {
-    cached.promise = null;
-    throw e;
+    await client.query('BEGIN');
+    const result = await work(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
   }
-
-  return cached.conn;
 }

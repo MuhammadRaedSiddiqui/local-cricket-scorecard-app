@@ -295,6 +295,8 @@ export default function ModernScorecard({ match, onBack, onShare }: ScoreCardPro
     );
   }
 
+  const { teamOne, teamTwo } = match;
+
   ////typescript
 // filepath: c:\Users\HP\OneDrive\Desktop\Cricket_App\Local_Cricket_Scorecard_App\components\sections\ModernScorecard.tsx
 // ...existing code...
@@ -302,15 +304,15 @@ export default function ModernScorecard({ match, onBack, onShare }: ScoreCardPro
   const getMatchResult = () => {
     if (!match || match.status !== 'completed') return null
 
-    const teamOneRuns = match.teamOne.total_score
-    const teamTwoRuns = match.teamTwo.total_score
+    const teamOneRuns = teamOne.total_score
+    const teamTwoRuns = teamTwo.total_score
 
     // Chase logic – 2nd innings with a target
     if (match.target && match.currentInnings === 2) {
       const battingTeam =
-        match.batting_team === match.teamOne.name ? match.teamOne : match.teamTwo
+        match.batting_team === teamOne.name ? teamOne : teamTwo
       const bowlingTeam =
-        match.bowling_team === match.teamOne.name ? match.teamOne : match.teamTwo
+        match.bowling_team === teamOne.name ? teamOne : teamTwo
 
       const target = match.target
       const chasingScore = battingTeam.total_score
@@ -343,10 +345,10 @@ export default function ModernScorecard({ match, onBack, onShare }: ScoreCardPro
 
     if (teamOneRuns > teamTwoRuns) {
       const diff = teamOneRuns - teamTwoRuns
-      return `${match.teamOne.name} won by ${diff} run${diff === 1 ? '' : 's'}`
+      return `${teamOne.name} won by ${diff} run${diff === 1 ? '' : 's'}`
     } else {
       const diff = teamTwoRuns - teamOneRuns
-      return `${match.teamTwo.name} won by ${diff} run${diff === 1 ? '' : 's'}`
+      return `${teamTwo.name} won by ${diff} run${diff === 1 ? '' : 's'}`
     }
   }
 

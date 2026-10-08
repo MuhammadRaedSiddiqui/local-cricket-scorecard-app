@@ -15,7 +15,7 @@ import { BowlerSelection } from './components/BowlerSelection';
 
 import { useMatchScoring, initialScoringState } from '@/hooks/useMatchScoring';
 import { Match, Player } from '@/types/match'; // Import types
-import { IScoringState } from '@/models/Match';
+import type { ScoringState as IScoringState } from '@/types/match';
 import CompactMatchStatus from './components/CompactMatchStatus';
 
 type MatchState = 'LOADING' | 'TOSS' | 'SCORING' | 'ERROR';

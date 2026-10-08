@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -74,14 +74,7 @@ export default function MatchViewPage() {
   const [copied, setCopied] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
 
-  useEffect(() => {
-    fetchMatch()
-   
-  }, [matchId])
-
- 
-
-  const fetchMatch = async () => {
+  const fetchMatch = useCallback(async () => {
     
     try {
       const token = localStorage.getItem('auth_token')
@@ -118,7 +111,11 @@ export default function MatchViewPage() {
       
       
     }
-  }
+  }, [matchId])
+
+  useEffect(() => {
+    fetchMatch()
+  }, [fetchMatch])
 
   const copyMatchCode = () => {
     if (match?.matchCode) {

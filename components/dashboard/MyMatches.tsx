@@ -190,7 +190,7 @@ export default function MyMatches({ matches, loading, onRefresh }: MyMatchesProp
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl font-bold text-gray-900">My Matches</h2>
-            <p className="text-sm text-gray-500">Matches you've created or manage</p>
+            <p className="text-sm text-gray-500">Matches you&apos;ve created or manage</p>
           </div>
           {/* We also render the filter/refresh UI in a loading state 
               to prevent layout shift, but you could skeleton this too. */}
@@ -246,7 +246,7 @@ export default function MyMatches({ matches, loading, onRefresh }: MyMatchesProp
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl font-bold text-gray-900">My Matches</h2>
-            <p className="text-sm text-gray-500">Matches you've created or manage</p>
+            <p className="text-sm text-gray-500">Matches you&apos;ve created or manage</p>
           </div>
 
           <div className="flex items-center gap-2">

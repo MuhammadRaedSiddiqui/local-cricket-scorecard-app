@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import Match from '@/models/Match';
-import User from '@/models/User';
 import { verifyToken } from '@/lib/auth';
 
 
@@ -17,27 +16,10 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     // Matches created by user
-    const createdMatches = await Match.find({
-      createdBy: user.userId
-    })
-      .sort({ createdAt: -1 })
-      .lean();
+    const createdMatches = await Match.listForUser(user.userId, 'created');
 
     // Matches where user is invited (admin, scorer, or viewer)
-    const invitedMatches = await Match.find({
-      $and: [
-        { createdBy: { $ne: user.userId } },
-        {
-          $or: [
-            { admins: user.userId },
-            { scorers: user.userId },
-            { viewers: user.userId }
-          ]
-        }
-      ]
-    })
-      .sort({ createdAt: -1 })
-      .lean();
+    const invitedMatches = await Match.listForUser(user.userId, 'invited');
 
     // Format matches for easier display
     const formatMatch = (match: any) => {
@@ -108,11 +90,6 @@ export async function POST(request: NextRequest) {
       status: 'upcoming'
     });
 
-    // Update user's created matches
-    await User.findByIdAndUpdate(user.userId, {
-      $push: { createdMatches: match._id }
-    });
-
     return NextResponse.json({
       success: true,
       data: match
@@ -154,10 +131,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    await Match.findByIdAndDelete(id);
-    if (match.createdBy) {
-      await User.findByIdAndUpdate(match.createdBy, { $pull: { createdMatches: match._id } });
-    }
+    await Match.deleteById(id);
 
     return NextResponse.json({ success: true, message: 'Match deleted' });
   } catch (error) {

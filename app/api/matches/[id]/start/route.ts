@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
-import Match from '@/models/Match';
+import Match, { MatchConflictError } from '@/models/Match';
 import { verifyToken } from '@/lib/auth';
 
 interface Params {
@@ -37,6 +37,9 @@ export async function POST(request: NextRequest, { params }: Params) {
     });
 
   } catch (error) {
+    if (error instanceof MatchConflictError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
     console.error('Start match error:', error);
     return NextResponse.json(
       { error: 'Failed to start match' },

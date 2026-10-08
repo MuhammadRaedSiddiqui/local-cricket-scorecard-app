@@ -15,7 +15,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const result = RegisterSchema.safeParse(body);
-    console.log(result)
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.issues }, { status: 400 });
@@ -38,7 +37,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    await connectDB();
+    const existingUser = await User.findByEmail(email);
     if (existingUser) {
       return NextResponse.json(
         { error: 'User already exists with this email' },
@@ -76,7 +76,10 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
 
   } catch (error) {
-    console.error('Registration error:', error);
+    if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
+      return NextResponse.json({ error: 'User already exists with this email' }, { status: 400 });
+    }
+    console.error('Registration error');
     return NextResponse.json(
       { error: 'Failed to create account. Please try again.' },
       { status: 500 }

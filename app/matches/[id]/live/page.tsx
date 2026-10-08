@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -48,16 +48,7 @@ export default function LiveMatchPage() {
   const [error, setError] = useState('')
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
 
-  useEffect(() => {
-    fetchMatch()
-    
-    // Auto-refresh every 10 seconds
-    const interval = setInterval(fetchMatch, 10000)
-    
-    return () => clearInterval(interval)
-  }, [matchId])
-
-  const fetchMatch = async () => {
+  const fetchMatch = useCallback(async () => {
     try {
       const response = await fetch(`/api/matches/${matchId}`)
 
@@ -81,7 +72,16 @@ export default function LiveMatchPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [matchId])
+
+  useEffect(() => {
+    fetchMatch()
+
+    // Auto-refresh every 10 seconds
+    const interval = setInterval(fetchMatch, 10000)
+
+    return () => clearInterval(interval)
+  }, [fetchMatch])
 
   const manualRefresh = () => {
     setLoading(true)

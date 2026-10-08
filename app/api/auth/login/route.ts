@@ -38,14 +38,13 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    const user = await User.findOne({ email: normalizedEmail }).select('+password');
+    const user = await User.findByEmail(normalizedEmail, true);
     
     if (!user || typeof user.password !== 'string') {
       if (user && typeof user.password !== 'string') {
-        logger.error('User record missing password hash', { userId: user._id.toString() });
+        logger.error('User record missing password hash');
         Sentry.captureMessage('User record missing password hash', {
           level: 'error',
-          extra: { userId: user._id.toString() },
         });
       }
       return NextResponse.json(
@@ -93,9 +92,9 @@ export async function POST(request: NextRequest) {
 
     return response;
 
-  } catch (error) {
-    logger.error('Login error', { error });
-    Sentry.captureException(error);
+  } catch {
+    logger.error('Login error');
+    Sentry.captureMessage('Login error', { level: 'error' });
     return NextResponse.json(
       { error: 'Failed to sign in. Please try again.' },
       { status: 500 }

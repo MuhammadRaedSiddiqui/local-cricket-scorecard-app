@@ -1,5 +1,8 @@
 
 import { Suspense } from 'react';
+import { getLeaderboard } from '@/lib/leaderboard';
+
+export const dynamic = 'force-dynamic';
 import LeaderboardTabs from '@/components/Leaderboard/LeaderboardTabs';
 import { Metadata } from 'next';
 import { ArrowUp10, BarChart3, Trophy } from 'lucide-react';
@@ -12,29 +15,11 @@ export const metadata: Metadata = {
 };
 
 async function getLeaderboardData() {
-  // Use the full URL for server-side fetch
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-
   try {
-    const res = await fetch(`${baseUrl}/api/leaderboard`, {
-      
-      next: { revalidate: 3600 }
-      
-    });
-
-    if (!res.ok) {
-      throw new Error('Failed to fetch leaderboard data');
-    }
-
-    return res.json();
-  } catch (error) {
-    console.error('Error fetching leaderboard:', error);
-    return {
-      battingStats: [],
-      bowlingStats: [],
-      teamStats: [],
-      totalMatches: 0
-    };
+    return await getLeaderboard();
+  } catch {
+    console.error('Failed to load leaderboard');
+    return { battingStats: [], bowlingStats: [], teamStats: [], totalMatches: 0 };
   }
 }
 

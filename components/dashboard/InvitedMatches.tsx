@@ -180,7 +180,7 @@ export default function InvitedMatches({ matches = [], loading, onRefresh }: Inv
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl font-bold text-gray-900">Invited Matches</h2>
-            <p className="text-sm text-gray-500">Matches where you're a participant</p>
+            <p className="text-sm text-gray-500">Matches where you&apos;re a participant</p>
           </div>
 
           <div className="flex items-center gap-2">

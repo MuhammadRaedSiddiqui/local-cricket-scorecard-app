@@ -12,10 +12,7 @@ export async function GET(request: NextRequest) {
 
     await connectDB();
     
-    const userData = await User.findById(user.userId)
-      .select('-password')
-      .populate('createdMatches', 'matchCode teamOne teamTwo status')
-      .populate('joinedMatches', 'matchCode teamOne teamTwo status');
+    const userData = await User.findProfile(user.userId);
 
     if (!userData) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });

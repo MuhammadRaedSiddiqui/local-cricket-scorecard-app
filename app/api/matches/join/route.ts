@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
-import Match from '@/models/Match';
-import User from '@/models/User';
+import Match, { MatchConflictError } from '@/models/Match';
 import { verifyToken } from '@/lib/auth';
-import mongoose from 'mongoose';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,16 +20,16 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     // 2. Find the match by its code
-    const match = await Match.findOne({ matchCode: matchCode.toUpperCase() });
+    const match = await Match.findByCode(matchCode.toUpperCase());
 
     if (!match) {
       return NextResponse.json({ error: 'Match not found' }, { status: 404 });
     }
 
-    const userId = new mongoose.Types.ObjectId(user.userId);
+    const userId = user.userId;
 
     // 3. Check if user is already part of the match
-    const isCreator = match.createdBy.equals(userId);
+    const isCreator = match.createdBy === userId;
     const isAdmin = match.admins.includes(userId);
     const isScorer = match.scorers.includes(userId);
     const isViewer = match.viewers.includes(userId);
@@ -45,12 +43,6 @@ export async function POST(request: NextRequest) {
 
     // 4. Add user to the match's 'viewers' array
     match.viewers.push(userId);
-    
-    // 5. Add match to the user's 'joinedMatches' array
-    // We use $addToSet to prevent duplicates
-    await User.findByIdAndUpdate(userId, {
-      $addToSet: { joinedMatches: match._id }
-    });
 
     await match.save();
 
@@ -61,6 +53,9 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
+    if (error instanceof MatchConflictError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
     console.error('Join Match Error:', error);
     return NextResponse.json(
       { error: 'Failed to join match', message: error.message },

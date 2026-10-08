@@ -187,9 +187,10 @@ export default function DashboardPage() {
   }, []);
 
   // --- 5. FIX: Pusher 'useEffect' now *only* calls updateMatchInState ---
+  const userId = user?.id;
   useEffect(() => {
-    if (!user || !user.id) return;
-    const channelName = `private-user-${user.id}`;
+    if (!userId) return;
+    const channelName = `private-user-${userId}`;
 
     let channel: any;
 
@@ -227,7 +228,7 @@ export default function DashboardPage() {
         pusherClient.unsubscribe(channelName);
       }
     };
-  }, [user?.id,]); // Dependency is correct
+  }, [userId, updateMatchInState]);
 
   const handleLogout = async () => {
     // ... (logic remains the same)

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import Match from '@/models/Match';
 import { verifyToken } from '@/lib/auth';
-import mongoose from 'mongoose';
 
 // Helper function (same as in your /api/matches route)
 const formatMatch = (match: any) => {
@@ -39,19 +38,12 @@ export async function GET(request: NextRequest) {
     }
 
     await connectDB();
-    const userId = new mongoose.Types.ObjectId(user.userId);
+    const userId = user.userId;
 
     // 1. Fetch user's matches (created and invited)
     const [createdMatchesRaw, invitedMatchesRaw] = await Promise.all([
-      Match.find({ createdBy: userId })
-        .sort({ createdAt: -1 })
-        .lean(),
-      Match.find({
-        $and: [
-          { createdBy: { $ne: userId } },
-          { $or: [{ admins: userId }, { scorers: userId }, { viewers: userId }] }
-        ]
-      }).sort({ createdAt: -1 }).lean()
+      Match.listForUser(userId, 'created'),
+      Match.listForUser(userId, 'invited')
     ]);
 
     // 2. Format them

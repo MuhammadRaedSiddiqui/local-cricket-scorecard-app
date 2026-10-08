@@ -20,10 +20,11 @@ export interface BowlingStats {
   name: string;
   matches: number;
   wickets: number;
-  bestBowling: number; // This is a simplified field from your API
+  runs_conceded: number;
+  maidens: number;
   overs: string;
   economy: number;
-  average: number;
+  average: number | null;
 }
 
 export interface TeamStats {
@@ -31,9 +32,17 @@ export interface TeamStats {
   matches: number;
   wins: number;
   losses: number;
+  draws: number;
   winRate: number;
   totalRuns: number;
   averageScore: number;
   highestScore: number;
   totalWickets: number;
+}
+
+export interface LeaderboardData {
+  battingStats: BattingStats[];
+  bowlingStats: BowlingStats[];
+  teamStats: TeamStats[];
+  totalMatches: number;
 }

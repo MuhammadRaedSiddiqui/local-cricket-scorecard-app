@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/db'
-import Match from '@/models/Match'
+import Match, { MatchConflictError } from '@/models/Match'
 import { verifyToken } from '@/lib/auth'
 
 interface Params {
@@ -17,8 +17,7 @@ export async function GET(request: NextRequest, { params }: Params) {
 
     await connectDB()
 
-    // ✅ Use .lean() to get plain object and include ALL fields
-    const match = await Match.findById(params.id).lean()
+        const match = await Match.findById(params.id)
 
     if (!match) {
       return NextResponse.json({ error: 'Match not found' }, { status: 404 })
@@ -71,7 +70,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     // ✅ Ensure player arrays are properly included in response
     // Convert to plain object to ensure proper JSON serialization
     const matchData = {
-      ...match,
+      ...match.toObject(),
       teamOne: match.teamOne ? {
         ...match.teamOne,
         players: (match.teamOne.players || []).map((p: any) => ({
@@ -118,6 +117,9 @@ export async function GET(request: NextRequest, { params }: Params) {
       data: matchData,
     })
   } catch (error) {
+    if (error instanceof MatchConflictError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
     console.error('Get match error:', error)
     return NextResponse.json(
       { error: 'Failed to get match' },
@@ -138,11 +140,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
 
     const body = await request.json()
 
-    const match = await Match.findByIdAndUpdate(
-      params.id,
-      { $set: body },
-      { new: true, runValidators: false }
-    )
+    const match = await Match.updateById(params.id, body)
 
     if (!match) {
       return NextResponse.json({ error: 'Match not found' }, { status: 404 })
@@ -153,6 +151,9 @@ export async function PUT(request: NextRequest, { params }: Params) {
       data: match,
     })
   } catch (error) {
+    if (error instanceof MatchConflictError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
     console.error('Update match error:', error)
     return NextResponse.json(
       { error: 'Failed to update match' },

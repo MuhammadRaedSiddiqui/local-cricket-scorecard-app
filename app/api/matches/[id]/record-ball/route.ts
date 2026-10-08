@@ -4,7 +4,6 @@ import Match, { IMatch, IPlayer, ITeam, IScoringState, IBall } from '@/models/Ma
 import { verifyToken } from '@/lib/auth';
 import { calculateBallOutcome } from '@/utils/scoringValidations';
 import { pusherServer } from '@/lib/pusher';
-import mongoose from 'mongoose'; // We no longer need ClientSession, but mongoose is still used
 
 interface Params {
   params: { id: string };
@@ -100,18 +99,14 @@ export async function POST(request: NextRequest, { params }: Params) {
   }
 
   await connectDB();
-  // --- FIX: REMOVED MONGOOSE SESSION ---
-  // const session = await mongoose.startSession(); // <-- REMOVED
 
   let updatedMatch: IMatch | null = null;
   let matchEnded = false;
 
   try {
-    // --- FIX: REMOVED `withTransaction` WRAPPER ---
-    // await session.withTransaction(async () => { // <-- REMOVED
 
       // 3. --- FETCH CURRENT STATE (Authoritative) ---
-      const match = await Match.findById(params.id); // <-- REMOVED .session(session)
+      const match = await Match.findById(params.id);
       if (!match) throw new Error('Match not found');
 
       const isAuthorized =
@@ -214,14 +209,8 @@ export async function POST(request: NextRequest, { params }: Params) {
       }
       
       // --- 6. SAVE ATOMICALLY ---
-      match.markModified('teamOne');
-      match.markModified('teamTwo');
-      match.markModified('scoringState');
-      match.markModified('ballHistory');
       
-      updatedMatch = await match.save(); // <-- REMOVED { session }
-      
-    // }); // <-- REMOVED `withTransaction` wrapper
+      updatedMatch = await match.save();
 
     // --- 7. TRIGGER REAL-TIME EVENT ---
     if (updatedMatch) {
@@ -248,25 +237,18 @@ export async function POST(request: NextRequest, { params }: Params) {
     });
 
   } catch (error: any) {
-    // --- FIX: CATCH MongoServerError OR VersionError (for race condition) ---
-    if (error.name === 'VersionError') {
-      console.warn('[API] /record-ball VersionError: A race condition occurred.');
+    if (error.name === 'MatchConflictError') {
+      console.warn('[API] /record-ball MatchConflictError: A race condition occurred.');
       return NextResponse.json(
         { error: 'Conflict: Another scorer updated the match. Please refresh and try again.' },
         { status: 409 } // 409 Conflict
       );
     }
     
-    // --- FIX: REMOVED `abortTransaction` ---
-    // await session.abortTransaction(); // <-- REMOVED THIS LINE
-    
     console.error(`❌ [API] /record-ball Error: ${error.message}`);
     return NextResponse.json(
       { error: error.message || 'Failed to record ball' },
       { status: 500 }
     );
-  } finally {
-    // --- FIX: REMOVED SESSION END ---
-    // await session.endSession(); // <-- REMOVED
   }
 }

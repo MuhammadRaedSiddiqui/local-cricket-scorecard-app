@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Save, AlertCircle } from 'lucide-react'
 import { Card } from '@/components/ui/card'
@@ -50,11 +50,7 @@ export default function EditMatchPage() {
     isPrivate: false
   })
 
-  useEffect(() => {
-    fetchMatch()
-  }, [matchId])
-
-  const fetchMatch = async () => {
+  const fetchMatch = useCallback(async () => {
     try {
       const token = localStorage.getItem('auth_token')
       const response = await fetch(`/api/matches/${matchId}`, {
@@ -97,7 +93,11 @@ export default function EditMatchPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [matchId])
+
+  useEffect(() => {
+    fetchMatch()
+  }, [fetchMatch])
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()

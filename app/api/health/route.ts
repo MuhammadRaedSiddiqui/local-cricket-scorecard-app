@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     await connectDB();
@@ -9,11 +11,11 @@ export async function GET() {
       database: 'connected',
       timestamp: new Date().toISOString()
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({
       status: 'error',
       database: 'disconnected',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: 'Database connection unavailable'
     }, { status: 500 });
   }
 }
