@@ -4,11 +4,12 @@ import Match from '@/models/Match';
 import { verifyToken } from '@/lib/auth';
 
 interface Params {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export async function POST(request: NextRequest, { params }: Params) {
   try {
+    const { id: matchId } = await params;
     // 1. Verify user is authenticated
     const user = await verifyToken(request);
     if (!user) {
@@ -17,7 +18,6 @@ export async function POST(request: NextRequest, { params }: Params) {
 
     await connectDB();
     const userId = user.userId;
-    const matchId = params.id;
 
     const match = await Match.findById(matchId);
     if (!match) {

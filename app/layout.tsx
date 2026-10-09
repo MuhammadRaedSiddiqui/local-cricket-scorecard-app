@@ -1,85 +1,32 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
-import * as Sentry from '@sentry/nextjs';
+import * as Sentry from '@sentry/nextjs'
 import './globals.css'
 
-const inter = Inter({ 
-  subsets: ['latin'],
-  variable: '--font-inter',
-})
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cricklive-seven.vercel.app'
 
-// export const metadata: Metadata = {
-//   title: 'Local League Cricket Scoreboard - Bring Local Cricket Online',
-//   description: 'Create, manage, and share live scorecards for your local leagues and friendly matches.',
-//   keywords: 'cricket, scoreboard, local cricket, live scores, cricket app, match scoring',
-//   authors: [{ name: 'Local League Cricket' }],
-//   openGraph: {
-//     title: 'Local League Cricket Scoreboard',
-//     description: 'Create, manage, and share live scorecards for your local leagues and friendly matches.',
-//     url: 'https://localleaguecricket.com',
-//     siteName: 'Local League Cricket Scoreboard',
-//     images: [
-//       {
-//         url: '/og-image.png',
-//         width: 1200,
-//         height: 630,
-//         alt: 'Local League Cricket Scoreboard',
-//       },
-//     ],
-//     locale: 'en_US',
-//     type: 'website',
-//   },
-//   twitter: {
-//     card: 'summary_large_image',
-//     title: 'Local League Cricket Scoreboard',
-//     description: 'Create, manage, and share live scorecards for your local leagues and friendly matches.',
-//     images: ['/og-image.png'],
-//   },
-//   robots: {
-//     index: true,
-//     follow: true,
-//   },
-//   viewport: 'width=device-width, initial-scale=1',
-// }
-
-export function generateMetadata():Metadata {
-  return{
-    title: 'Local League Cricket Scoreboard - Bring Local Cricket Online',
-  description: 'Create, manage, and share live scorecards for your local leagues and friendly matches.',
-  keywords: 'cricket, scoreboard, local cricket, live scores, cricket app, match scoring',
-  authors: [{ name: 'Local League Cricket' }],
-  openGraph: {
-    title: 'Local League Cricket Scoreboard',
-    description: 'Create, manage, and share live scorecards for your local leagues and friendly matches.',
-    url: 'https://localleaguecricket.com',
-    siteName: 'Local League Cricket Scoreboard',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'Local League Cricket Scoreboard',
-      },
-    ],
-    locale: 'en_US',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Local League Cricket Scoreboard',
-    description: 'Create, manage, and share live scorecards for your local leagues and friendly matches.',
-    images: ['/og-image.png'],
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-  viewport: 'width=device-width, initial-scale=1',
-  other:{
-    ...Sentry.getTraceData()
-  }
+export function generateMetadata(): Metadata {
+  return {
+    metadataBase: new URL(siteUrl),
+    title: 'CrickLive - Local Cricket Scorecards',
+    description: 'Create matches, record every ball, and share live cricket scorecards with your local league.',
+    keywords: ['cricket', 'scorecard', 'local cricket', 'live scores', 'match scoring'],
+    openGraph: {
+      title: 'CrickLive - Local Cricket Scorecards',
+      description: 'Bring local cricket online with ball-by-ball scoring and live match updates.',
+      url: siteUrl,
+      siteName: 'CrickLive',
+      locale: 'en_US',
+      type: 'website',
+    },
+    twitter: { card: 'summary_large_image' },
+    robots: { index: true, follow: true },
+    other: { ...Sentry.getTraceData() },
   }
 }
+
+export const viewport: Viewport = { width: 'device-width', initialScale: 1 }
 
 export default function RootLayout({
   children,

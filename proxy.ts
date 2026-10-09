@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
 
-// Run on the Edge
-export const runtime = 'experimental-edge'
 
 // Routes that require authentication
 const protectedRoutes = [
@@ -19,7 +17,7 @@ const publicOnlyRoutes = [
   '/register',
 ]
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname
   const token = request.cookies.get('auth-token')?.value
 

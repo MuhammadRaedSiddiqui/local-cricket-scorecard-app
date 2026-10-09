@@ -6,7 +6,7 @@ import { calculateBallOutcome } from '@/utils/scoringValidations';
 import { pusherServer } from '@/lib/pusher';
 
 interface Params {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 interface RecordBallRequest {
@@ -88,6 +88,7 @@ function updatePlayerStats(
 
 
 export async function POST(request: NextRequest, { params }: Params) {
+  const { id: matchId } = await params;
   const user = await verifyToken(request);
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest, { params }: Params) {
   try {
 
       // 3. --- FETCH CURRENT STATE (Authoritative) ---
-      const match = await Match.findById(params.id);
+      const match = await Match.findById(matchId);
       if (!match) throw new Error('Match not found');
 
       const isAuthorized =

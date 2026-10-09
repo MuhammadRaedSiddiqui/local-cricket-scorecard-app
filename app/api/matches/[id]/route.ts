@@ -4,12 +4,13 @@ import Match, { MatchConflictError } from '@/models/Match'
 import { verifyToken } from '@/lib/auth'
 
 interface Params {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 // GET single match
 export async function GET(request: NextRequest, { params }: Params) {
   try {
+    const { id: matchId } = await params;
     const user = await verifyToken(request)
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest, { params }: Params) {
 
     await connectDB()
 
-        const match = await Match.findById(params.id)
+        const match = await Match.findById(matchId)
 
     if (!match) {
       return NextResponse.json({ error: 'Match not found' }, { status: 404 })
@@ -131,6 +132,7 @@ export async function GET(request: NextRequest, { params }: Params) {
 // PUT/PATCH - Update match (if needed)
 export async function PUT(request: NextRequest, { params }: Params) {
   try {
+    const { id: matchId } = await params;
     const user = await verifyToken(request)
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -140,7 +142,17 @@ export async function PUT(request: NextRequest, { params }: Params) {
 
     const body = await request.json()
 
-    const match = await Match.updateById(params.id, body)
+    const existingMatch = await Match.findById(matchId)
+    if (!existingMatch) {
+      return NextResponse.json({ error: 'Match not found' }, { status: 404 })
+    }
+    const canEdit = existingMatch.createdBy === user.userId ||
+      existingMatch.admins.includes(user.userId) || existingMatch.scorers.includes(user.userId)
+    if (!canEdit) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const match = await Match.updateById(matchId, body, existingMatch)
 
     if (!match) {
       return NextResponse.json({ error: 'Match not found' }, { status: 404 })

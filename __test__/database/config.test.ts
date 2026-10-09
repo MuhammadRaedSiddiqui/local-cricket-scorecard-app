@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { createPostgresConfig } from '@/lib/postgres-config.cjs';
 
 describe('PostgreSQL connection configuration', () => {

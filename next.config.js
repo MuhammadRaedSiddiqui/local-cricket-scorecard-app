@@ -14,7 +14,7 @@ const nextConfig = {
   },
   reactStrictMode: true,
   images: {
-    domains: ['localhost'],
+    remotePatterns: [{ protocol: 'http', hostname: 'localhost' }],
   },
 }
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
@@ -26,7 +26,7 @@ module.exports = withBundleAnalyzer(nextConfig)
 
 // Injected content via Sentry wizard below
 
-const { withSentryConfig } = require("@sentry/nextjs");
+const { withSentryConfig } = require("@sentry/nextjs/config");
 
 module.exports = withSentryConfig(
   module.exports,
@@ -53,7 +53,7 @@ module.exports = withSentryConfig(
     // tunnelRoute: "/monitoring",
 
     // Automatically tree-shake Sentry logger statements to reduce bundle size
-    disableLogger: true,
+    bundleSizeOptimizations: { excludeDebugStatements: true },
 
     // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
     // See the following for more information:

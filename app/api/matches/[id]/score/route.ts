@@ -5,13 +5,14 @@ import { verifyToken } from '@/lib/auth'
 import { pusherServer } from '@/lib/pusher';
 
 interface Params {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export async function POST(request: NextRequest, { params }: Params) {
   const startTime = Date.now()
 
   try {
+    const { id: matchId } = await params;
     console.log('🔵 [API] POST /api/matches/:id/score started')
 
     const user = await verifyToken(request)
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     await connectDB()
     console.log('✅ [API] Database connected')
 
-    const existingMatch = await Match.findById(params.id)
+    const existingMatch = await Match.findById(matchId)
     if (!existingMatch) {
       console.log('❌ [API] Match not found')
       return NextResponse.json({ error: 'Match not found' }, { status: 404 })
@@ -235,7 +236,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     }
 
 
-    const updatedMatch = await Match.updateById(params.id, updateData, existingMatch)
+    const updatedMatch = await Match.updateById(matchId, updateData, existingMatch)
 
     if (!updatedMatch) {
       console.log('❌ [API] Failed to update match')

@@ -5,7 +5,7 @@ import { verifyToken } from '@/lib/auth';
 import { pusherServer } from '@/lib/pusher';
 
 interface Params {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 // Helper to convert balls to overs
@@ -17,6 +17,7 @@ const ballsToOvers = (balls: number): string => {
 
 export async function POST(request: NextRequest, { params }: Params) {
   try {
+    const { id: matchId } = await params;
     console.log('🔵 [UNDO] POST /api/matches/:id/undo-ball started');
 
     const user = await verifyToken(request);
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     await connectDB();
     console.log('✅ [UNDO] Database connected');
 
-    const match = await Match.findById(params.id);
+    const match = await Match.findById(matchId);
     if (!match) {
       console.log('❌ [UNDO] Match not found');
       return NextResponse.json({ error: 'Match not found' }, { status: 404 });

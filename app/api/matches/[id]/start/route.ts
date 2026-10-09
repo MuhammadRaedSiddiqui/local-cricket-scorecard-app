@@ -4,11 +4,12 @@ import Match, { MatchConflictError } from '@/models/Match';
 import { verifyToken } from '@/lib/auth';
 
 interface Params {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export async function POST(request: NextRequest, { params }: Params) {
   try {
+    const { id: matchId } = await params;
     const user = await verifyToken(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest, { params }: Params) {
 
     await connectDB();
     
-    const match = await Match.findById(params.id);
+    const match = await Match.findById(matchId);
     
     if (!match) {
       return NextResponse.json({ error: 'Match not found' }, { status: 404 });

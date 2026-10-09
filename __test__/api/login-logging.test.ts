@@ -1,37 +1,38 @@
+import { vi, type Mock } from 'vitest';
 import { POST } from '@/app/api/auth/login/route';
 import { connectDB } from '@/lib/db';
 import User from '@/models/User';
 import * as Sentry from '@sentry/nextjs';
 import * as winston from 'winston';
 import { NextRequest } from 'next/server';
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { beforeEach, describe, expect, it } from 'vitest';
 
-jest.mock('@/lib/db', () => ({ connectDB: jest.fn() }));
-jest.mock('@/models/User', () => ({
+vi.mock('@/lib/db', () => ({ connectDB: vi.fn() }));
+vi.mock('@/models/User', () => ({
   __esModule: true,
-  default: { findByEmail: jest.fn() },
+  default: { findByEmail: vi.fn() },
 }));
-jest.mock('@sentry/nextjs', () => ({
-  init: jest.fn(),
-  captureMessage: jest.fn(),
-  captureException: jest.fn(),
+vi.mock('@sentry/nextjs', () => ({
+  init: vi.fn(),
+  captureMessage: vi.fn(),
+  captureException: vi.fn(),
 }));
-jest.mock('winston', () => {
-  const logError = jest.fn();
+vi.mock('winston', () => {
+  const logError = vi.fn();
   return {
     __esModule: true,
     logError,
     default: {
       createLogger: () => ({ error: logError }),
-      format: { json: jest.fn() },
-      transports: { File: jest.fn() },
+      format: { json: vi.fn() },
+      transports: { Console: vi.fn() },
     },
   };
 });
 
-const logError = (winston as unknown as { logError: jest.Mock }).logError;
-const findByEmail = jest.mocked(User.findByEmail);
-const dbConnect = jest.mocked(connectDB);
+const logError = (winston as unknown as { logError: Mock }).logError;
+const findByEmail = vi.mocked(User.findByEmail);
+const dbConnect = vi.mocked(connectDB);
 
 const request = () => new NextRequest('http://localhost', {
   method: 'POST',
@@ -54,7 +55,7 @@ describe('Login logging privacy', () => {
     expect(findByEmail).toHaveBeenCalledWith('unit@example.com', true);
     expect(logError).toHaveBeenCalledWith('User record missing password hash');
     expect(Sentry.captureMessage).toHaveBeenCalledWith('User record missing password hash', { level: 'error' });
-    const diagnostics = JSON.stringify([logError.mock.calls, jest.mocked(Sentry.captureMessage).mock.calls]);
+    const diagnostics = JSON.stringify([logError.mock.calls, vi.mocked(Sentry.captureMessage).mock.calls]);
     expect(diagnostics).not.toContain('private-account-identifier');
     expect(diagnostics).not.toContain('test-input-password');
   });

@@ -1,28 +1,26 @@
+import { vi, type MockInstance } from 'vitest';
 import { POST as registerHandler } from '@/app/api/auth/register/route';
 import { NextRequest } from 'next/server';
-import { beforeEach, afterEach, describe, it, expect } from '@jest/globals';
+import { beforeEach, afterEach, describe, it, expect } from 'vitest';
 import bcrypt from 'bcryptjs';
 import User from '@/models/User';
 
 // Keep registration checks independent of PostgreSQL and deployment credentials.
-jest.mock('@/lib/db', () => ({ connectDB: jest.fn() }));
-jest.mock('@/models/User', () => ({
+vi.mock('@/lib/db', () => ({ connectDB: vi.fn() }));
+vi.mock('@/models/User', () => ({
   __esModule: true,
-  default: { findByEmail: jest.fn(), create: jest.fn() },
+  default: { findByEmail: vi.fn(), create: vi.fn() },
 }));
 
-const findByEmail = jest.mocked(User.findByEmail);
-const createUser = jest.mocked(User.create);
-let consoleLog: jest.SpiedFunction<typeof console.log>;
-let consoleError: jest.SpiedFunction<typeof console.error>;
+const findByEmail = vi.mocked(User.findByEmail);
+const createUser = vi.mocked(User.create);
+let consoleLog: MockInstance<typeof console.log>;
+let consoleError: MockInstance<typeof console.error>;
 
 beforeEach(() => {
-  consoleLog = jest.spyOn(console, 'log').mockImplementation(() => {});
-  consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
-  jest.replaceProperty(process, 'env', {
-    ...process.env,
-    JWT_SECRET: 'phase-1-unit-test-secret',
-  });
+  consoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
+  consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+  vi.stubEnv('JWT_SECRET', 'phase-1-unit-test-secret');
   findByEmail.mockResolvedValue(null);
   createUser.mockResolvedValue({
     name: 'John',
@@ -32,7 +30,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
+  vi.unstubAllEnvs();
 });
 
 describe('Auth Register', () => {

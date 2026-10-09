@@ -1,38 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CrickLive
 
-## Getting Started
+[![CI](https://github.com/MuhammadRaedSiddiqui/local-cricket-scorecard-app/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadRaedSiddiqui/local-cricket-scorecard-app/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-The application uses PostgreSQL. Follow the [Aiven PostgreSQL setup guide](docs/postgresql-setup.md) to configure `.env.local` and run `npm.cmd run db:migrate` before starting the app. See `.env.example` for the required settings.
+Create and manage local cricket matches, record every ball, and share live scorecards with players and spectators.
 
-First, run the development server:
+[Live app](https://cricklive-seven.vercel.app) · [Setup guide](docs/postgresql-setup.md) · [Verification](docs/verification.md) · [Contributing](CONTRIBUTING.md)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+![CrickLive home page](docs/screenshots/home.png)
+
+## Features
+
+- Account registration and login with bcrypt password hashing and JWT cookies.
+- Match creation, team/player setup, toss selection, and match-code joining.
+- Ball-by-ball runs, wickets, extras, innings progression, and undo.
+- Live scorecards and Pusher updates for match participants.
+- Match dashboards and team, batting, and bowling leaderboards.
+- PostgreSQL persistence, SQL migrations, and stale-update conflict checks.
+
+![Match scoring screen using fictional verification players](docs/screenshots/scoring.png)
+
+## Stack
+
+Next.js App Router, React, TypeScript, Tailwind CSS, PostgreSQL through `pg`, and Pusher. Aiven PostgreSQL is supported with verified TLS. Sentry monitoring is optional. The interface uses Inter.
+
+## Run locally
+
+Use Node.js **22 or 24** and npm. You need a PostgreSQL database and Pusher application settings.
+
+```sh
+git clone https://github.com/MuhammadRaedSiddiqui/local-cricket-scorecard-app.git
+cd local-cricket-scorecard-app
+npm ci
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Copy `.env.example` to `.env.local` and fill in the database, CA certificate, JWT secret, and Pusher settings. Follow the [setup guide](docs/postgresql-setup.md) for Aiven connection details and secret generation.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```sh
+npm run db:migrate
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open [localhost:3000](http://localhost:3000). On Windows PowerShell, use `npm.cmd` if script execution policy blocks `npm`.
 
-## Learn More
+## Check and build
 
-To learn more about Next.js, take a look at the following resources:
+```sh
+npm run lint
+npm run typecheck
+npm test
+npm run test:coverage
+npm audit
+npm run build
+npm start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Database integration tests use isolated PGlite and do not connect to Aiven. Browser tests require a running app and an isolated database; see [verification instructions](docs/verification.md). CI runs lint, types, tests, dependency auditing, a production build, and browser checks.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy
 
-## Deploy on Vercel
+Set the environment variables on the host, run migrations against its intended PostgreSQL database, then build and deploy. CA file paths from your computer do not exist on Vercel: use `DATABASE_CA_CERT` there. Public Pusher settings are compiled into the client, so rebuild after changing them.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Migrations initialize schema; they do not import historical MongoDB data. Never commit credentials, certificates, logs, or production data. The landing-page preview contains illustrative sample data.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Project layout
+
+| Path | Purpose |
+| --- | --- |
+| `app/` | Pages and API routes |
+| `models/`, `lib/` | PostgreSQL repositories, authentication, scoring support, realtime clients |
+| `db/migrations/`, `scripts/` | Schema migrations and verification tools |
+| `__test__/`, `e2e/` | Unit, database, and browser tests |
+| `docs/` | Setup, verification reports, and screenshots |
+
+## Contributing and security
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [code of conduct](CODE_OF_CONDUCT.md). Report security issues privately using [SECURITY.md](SECURITY.md).
+
+Licensed under the [MIT license](LICENSE).

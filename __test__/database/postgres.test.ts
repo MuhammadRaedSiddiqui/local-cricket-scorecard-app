@@ -1,3 +1,4 @@
+import { vi, beforeAll, beforeEach, afterEach, afterAll, describe, it, expect } from 'vitest';
 import { PGlite } from '@electric-sql/pglite';
 import { applyMigrations } from '@/scripts/migrations.cjs';
 import path from 'node:path';
@@ -21,20 +22,20 @@ import { POST as record } from '@/app/api/matches/[id]/record-ball/route';
 import { POST as undo } from '@/app/api/matches/[id]/undo-ball/route';
 import { GET as health } from '@/app/api/health/route';
 
-jest.mock('@sentry/nextjs', () => ({ init: jest.fn(), captureMessage: jest.fn() }));
-jest.mock('@/lib/pusher', () => ({
-  pusherServer: { trigger: jest.fn().mockResolvedValue(undefined) },
+vi.mock('@sentry/nextjs', () => ({ init: vi.fn(), captureMessage: vi.fn() }));
+vi.mock('@/lib/pusher', () => ({
+  pusherServer: { trigger: vi.fn().mockResolvedValue(undefined) },
 }));
-jest.mock('winston', () => ({
+vi.mock('winston', () => ({
   __esModule: true,
   default: {
-    createLogger: () => ({ error: jest.fn() }),
-    format: { json: jest.fn() }, transports: { File: jest.fn() },
+    createLogger: () => ({ error: vi.fn() }),
+    format: { json: vi.fn() }, transports: { Console: vi.fn() },
   },
 }));
 
 // WASM startup plus real bcrypt checks can exceed Jest's 5s default on Windows.
-jest.setTimeout(30000);
+
 
 let db: PGlite;
 const secret = 'postgres-integration-test-secret';
@@ -62,7 +63,7 @@ async function fixture() {
   }, owner.token));
   expect(response.status).toBe(201);
   const { data } = await response.json();
-  return { owner, match: data, params: { params: { id: data._id as string } } };
+  return { owner, match: data, params: { params: Promise.resolve({ id: data._id as string }) } };
 }
 
 beforeAll(async () => {
@@ -76,7 +77,7 @@ beforeAll(async () => {
     const result = await db.query(sql, values);
     return { rows: result.rows, rowCount: result.affectedRows ?? result.rows.length };
   };
-  const release = jest.fn();
+  const release = vi.fn();
   // Only transport is substituted: real repository SQL and transaction code run
   // against PostgreSQL compiled to WASM. No Aiven credentials/network are used.
   global.cricketPostgresPool = {
@@ -86,13 +87,13 @@ beforeAll(async () => {
 }, 60000);
 
 beforeEach(async () => {
-  jest.replaceProperty(process, 'env', { ...process.env, JWT_SECRET: secret });
-  jest.spyOn(console, 'log').mockImplementation(() => {});
-  jest.spyOn(console, 'error').mockImplementation(() => {});
+  vi.stubEnv('JWT_SECRET', secret);
+  vi.spyOn(console, 'log').mockImplementation(() => {});
+  vi.spyOn(console, 'error').mockImplementation(() => {});
   await db.exec('TRUNCATE match_members, matches, users CASCADE');
 });
 
-afterEach(() => jest.restoreAllMocks());
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs(); });
 afterAll(async () => {
   global.cricketPostgresPool = undefined;
   await db?.close();
@@ -150,7 +151,10 @@ describe('PostgreSQL-backed API behavior', () => {
   it('joins, lists, leaves, and deletes memberships without dangling user match arrays', async () => {
     const { owner, match, params } = await fixture();
     const viewer = await account('viewer@example.com');
+    expect((await updateMatch(request({ 'teamOne.total_score': 99 }, viewer.token, 'PUT'), params)).status).toBe(403);
     expect((await join(request({ matchCode: match.matchCode.toLowerCase() }, viewer.token))).status).toBe(200);
+    expect((await updateMatch(request({ 'teamOne.total_score': 99 }, viewer.token, 'PUT'), params)).status).toBe(403);
+    expect((await Match.findById(match._id))?.teamOne.total_score).toBe(0);
     expect((await join(request({ matchCode: match.matchCode }, viewer.token))).status).toBe(409);
     expect((await User.findProfile(viewer.user.id))?.joinedMatches).toHaveLength(1);
     const list = await listMatches(request(undefined, viewer.token, 'GET'));
@@ -215,7 +219,7 @@ describe('PostgreSQL-backed API behavior', () => {
     stale.teamOne.total_score = 6;
     await expect(stale.save()).rejects.toBeInstanceOf(MatchConflictError);
     expect((await Match.findById(match._id))?.teamOne.total_score).toBe(4);
-    const lookup = jest.spyOn(Match, 'findById').mockResolvedValueOnce(stale);
+    const lookup = vi.spyOn(Match, 'findById').mockResolvedValueOnce(stale);
     const conflict = await updateMatch(request({ 'teamOne.total_score': 8 }, owner.token, 'PUT'), params);
     expect(conflict.status).toBe(409);
     lookup.mockRestore();
