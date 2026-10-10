@@ -4,7 +4,7 @@
 
 Run `npm run lint`, `npm run typecheck`, `npm test`, `npm audit`, and `npm run build`. Unit and SQL integration tests use an in-memory PGlite database and do not contact your configured PostgreSQL service.
 
-Coverage currently focuses on authentication and the PostgreSQL/API workflows. `npm run test:coverage` is not a claim of complete application coverage.
+The test suite covers authentication and PostgreSQL/API workflows. Coverage instrumentation includes only the login and register routes; `npm run test:coverage` is not a claim of complete application coverage. See the [verified results](repository-health-verification.md).
 
 ## Browser checks
 
